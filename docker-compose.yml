@@ -1,0 +1,118 @@
+version: "3.9"
+services:
+  php-apache:
+    build:
+      context: ./php-apache/
+    container_name: php-apache
+    environment:
+      - APACHE_RUN_USER=#1000
+    ports:
+      - "80:80"
+    volumes:
+      - ./app:${APP_PATCH}
+      - ./php-apache/config/apache2.conf:/etc/apache2/apache2.conf
+      - ./php-apache/config/000-default.conf:/etc/apache2/sites-available/000-default.conf
+    links:
+      - node
+    depends_on:
+      #- db-mysql
+      - db-postgres
+      #- node
+
+  apache:
+    build:
+      context: ./apache/
+    container_name: apache
+    working_dir: ${APP_PATCH}
+
+    environment:
+      - APACHE_RUN_USER=#1000
+    ports:
+      - "80:80"
+    volumes:
+      - ./app:${APP_PATCH}
+    links:
+      - php
+      - db-postgres
+    depends_on:
+      - php
+      - db-postgres
+
+
+  php:
+    build:
+        context: ./php/
+    container_name: php 
+    working_dir: ${APP_PATCH}
+    volumes:
+      - ./app/:${APP_PATCH}
+
+  nginx:
+    build:
+        context: ./nginx/
+    container_name: nginx
+    ports:
+      - "80:80"      
+    volumes:
+      - ./app/:${APP_PATCH}
+      #- ./nginx/nginx.conf:/etc/nginx/nginx.conf
+     
+ 
+     
+
+    
+
+  db-mysql:
+    image: mysql:8.0.27
+    container_name: mysql
+    restart: always
+    environment:
+      TZ: Europe/Moscow # root password
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD} # Initialize the database (subsequent initialization SQL will be executed in this library)
+      MYSQL_DATABASE: ${DB_NAME} # Initialize the user (cannot be ROOT will report error, follow-up to give privileges to new users)
+      MYSQL_USER: ${DB_USER} # user password 
+      MYSQL_PASSWORD: ${DB_PASSWORD} #      
+    ports:
+      - 3306:3306
+    volumes:
+      - ./mysql/data/:/var/lib/mysql/ # Configure mount
+      - ./mysql/config/:/etc/mysql/conf.d/ # Initialize the directory mount
+      - ./mysql/config/:/docker-entrypoint-initdb.d/
+    command: 
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+      --explicit_defaults_for_timestamp=true
+
+  db-postgres:
+    image: postgres
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes: 
+      - ./postgres/data/:/var/lib/postgresql/data
+  node:
+    build:
+      context: ./node/
+    container_name: node
+    working_dir: ${APP_PATCH}
+    volumes:
+      - ./app/:${APP_PATCH}
+      - ./node/scripts/:/scripts/
+      
+    entrypoint:
+      - /scripts/node_start.sh
+    #restart: always
+    
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - db-mysql
+      - db-postgres
