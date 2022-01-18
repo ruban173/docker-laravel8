@@ -56,7 +56,12 @@ services:
     volumes:
       - ./app/:${APP_PATCH}
       #- ./nginx/nginx.conf:/etc/nginx/nginx.conf
-     
+    links:
+      - php
+      - db-postgres
+    depends_on:
+      - php
+      - db-postgres
  
      
 

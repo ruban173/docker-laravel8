@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\LoginController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\LogoutController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -15,10 +17,18 @@ use App\Http\Controllers\RegisterController;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('home');
+
+Route::get('/forgot-password', function () {
+    return view('welcome');
+})->name('forgot-password');
 
 
 Route::get('/register', [RegisterController::class,'register'])->name('register');
 Route::post('/register', [RegisterController::class,'registerPost'])->name('register-post');
 
-Route::get('/login', [RegisterController::class,'register'])->name('login');
+Route::get('/login', [LoginController::class,'login'])->name('login');
+Route::post('/login', [LoginController::class,'loginPost'])->name('login-post');
+
+
+Route::get('/logout', [LogoutController::class,'logout'])->name('logout');

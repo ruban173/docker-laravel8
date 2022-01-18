@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Crypt;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -29,7 +30,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $hidden = [
-        'password',
+      //  'password',
         'remember_token',
     ];
 
@@ -41,4 +42,32 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+  /*  public function getPasswordAttribute()
+    {
+        return Crypt::decryptString($this->password);
+    }*/
+
+    public function getPasswordAttribute($value)
+    {
+        return Crypt::decryptString($value);
+    }
+
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password']= Crypt::encryptString($value);
+
+    }
+
+    public function passwordValidate($password){
+        return  $this->password===$password;
+    }
+
+    public function logout(){
+        
+    }
+
+
+
+
 }
